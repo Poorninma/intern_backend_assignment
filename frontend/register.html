@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Register</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .card {
+      background: white;
+      padding: 30px;
+      width: 300px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+    }
+    button {
+      background: green;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .msg {
+      margin-top: 10px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="card">
+  <h2>🔐 Register</h2>
+
+  <input id="name" placeholder="Name">
+  <input id="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password">
+
+  <button onclick="register()">Register</button>
+
+  <div class="msg" id="msg"></div>
+
+  <p>Already have account? <a href="login.html">Login</a></p>
+</div>
+
+<script>
+async function register() {
+  const msg = document.getElementById("msg");
+
+  // ✅ Get values properly
+  const nameInput = document.getElementById("name").value;
+  const emailInput = document.getElementById("email").value;
+  const passwordInput = document.getElementById("password").value;
+
+  // ✅ Simple validation
+  if (!nameInput || !emailInput || !passwordInput) {
+    msg.innerHTML = "❌ All fields are required";
+    msg.style.color = "red";
+    return;
+  }
+
+  try {
+    const res = await fetch("http://127.0.0.1:5000/api/v1/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: nameInput,
+        email: emailInput,
+        password: passwordInput
+      })
+    });
+
+    const data = await res.json();
+    console.log(data); // debug
+
+    if (res.ok) {
+      msg.innerHTML = "✅ Registered successfully!";
+      msg.style.color = "green";
+
+      setTimeout(() => {
+        window.location.href = "login.html";
+      }, 1200);
+
+    } else {
+      msg.innerHTML = data.msg || JSON.stringify(data);
+      msg.style.color = "red";
+    }
+
+  } catch (err) {
+    msg.innerHTML = "❌ Server not reachable";
+    msg.style.color = "red";
+  }
+}
+</script>
+
+</body>
+</html>

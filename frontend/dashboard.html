@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard</title>
+  <style>
+    body {
+      font-family: Arial;
+      max-width: 600px;
+      margin: auto;
+      padding: 20px;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+    }
+    button {
+      background: green;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .task {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h2>📊 Dashboard</h2>
+<button onclick="logout()">Logout</button>
+
+<h3>Create Task</h3>
+<input id="title" placeholder="Title">
+<input id="desc" placeholder="Description">
+<button onclick="createTask()">Create Task</button>
+
+<h3>Tasks</h3>
+<button onclick="getTasks()">Load Tasks</button>
+<div id="taskList"></div>
+
+<script>
+// 🔐 protect page
+if (!localStorage.getItem("token")) {
+  alert("Please login first");
+  window.location.href = "login.html";
+}
+
+const API = "http://127.0.0.1:5000/api/v1";
+
+// 🔑 get token
+function getToken() {
+  return localStorage.getItem("token");
+}
+
+// 🚪 logout
+function logout() {
+  localStorage.removeItem("token");
+  window.location.href = "login.html";
+}
+
+// 📝 create task
+async function createTask() {
+  await fetch(`${API}/tasks`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + getToken()
+    },
+    body: JSON.stringify({
+      title: document.getElementById("title").value,
+      description: document.getElementById("desc").value
+    })
+  });
+
+  alert("Task created ✅");
+  getTasks();
+}
+
+// 📋 get tasks
+async function getTasks() {
+  const res = await fetch(`${API}/tasks`, {
+    headers: {
+      "Authorization": "Bearer " + getToken()
+    }
+  });
+
+  const data = await res.json();
+
+  const list = document.getElementById("taskList");
+  list.innerHTML = "";
+
+  data.forEach(task => {
+    list.innerHTML += `
+      <div class="task">
+        <b>${task.title}</b><br>
+        ${task.description}<br><br>
+
+        <button onclick="updateTask('${task._id}')">✏️ Update</button>
+        <button onclick="deleteTask('${task._id}')">🗑️ Delete</button>
+      </div>
+    `;
+  });
+}
+
+// ✏️ update
+async function updateTask(id) {
+  const newTitle = prompt("Enter new title:");
+  const newDesc = prompt("Enter new description:");
+
+  if (!newTitle || !newDesc) return;
+
+  await fetch(`${API}/tasks/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + getToken()
+    },
+    body: JSON.stringify({
+      title: newTitle,
+      description: newDesc
+    })
+  });
+
+  alert("Updated ✅");
+  getTasks();
+}
+
+// 🗑️ delete
+async function deleteTask(id) {
+  await fetch(`${API}/tasks/${id}`, {
+    method: "DELETE",
+    headers: {
+      "Authorization": "Bearer " + getToken()
+    }
+  });
+
+  alert("Deleted ✅");
+  getTasks();
+}
+</script>
+
+</body>
+</html>
